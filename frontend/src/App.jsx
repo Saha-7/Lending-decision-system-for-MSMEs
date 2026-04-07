@@ -10,26 +10,38 @@ export default function App() {
   const [error, setError] = useState(null);
 
   async function handleSubmit(formData) {
-    setLoading(true);
-    setError(null);
-    setDecision(null);
+  setLoading(true);
+  setError(null);
+  setDecision(null);
 
+  try {
     const response = await fetch(`${API_BASE}/applications`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
 
-    const data = await response.json();
-    setLoading(false);
+    const text = await response.text();          // read as text first
+    let data;
+    try {
+      data = JSON.parse(text);                   // then parse
+    } catch {
+      setError("Server returned an unexpected response. Please try again.");
+      return;
+    }
 
     if (!response.ok) {
-      setError(data.error || "Something went wrong. Please try again.");
+      setError(data.error || "Something went wrong.");
       return;
     }
 
     setDecision(data);
+  } catch (err) {
+    setError("Network error. Please check your connection.", err);
+  } finally {
+    setLoading(false);
   }
+}
 
   function handleReset() {
     setDecision(null);
